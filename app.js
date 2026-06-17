@@ -7,6 +7,7 @@ function resizeCanvas() {
   canvas.height = window.innerHeight;
 }
 resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
 
 function fingersUp(landmarks) {
   return {
@@ -30,25 +31,71 @@ function getGesture(landmarks) {
   return "HAND";
 }
 
-function applyEffect(gesture) {
+function pos(point) {
+  return {
+    x: point.x * canvas.width,
+    y: point.y * canvas.height
+  };
+}
+
+function drawSunglasses(landmarks) {
+  const p = pos(landmarks[9]);
+  ctx.font = "90px Arial";
+  ctx.fillText("😎", p.x - 45, p.y - 120);
+}
+
+function drawCrown(landmarks) {
+  const p = pos(landmarks[9]);
+  ctx.font = "90px Arial";
+  ctx.fillText("👑", p.x - 45, p.y - 150);
+}
+
+function drawFire() {
+  ctx.font = "80px Arial";
+  for (let i = 0; i < 6; i++) {
+    ctx.fillText("🔥", Math.random() * canvas.width, canvas.height - Math.random() * 220);
+  }
+}
+
+function drawLaser(landmarks) {
+  const p = pos(landmarks[8]);
+  ctx.strokeStyle = "red";
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  ctx.moveTo(p.x, p.y);
+  ctx.lineTo(canvas.width, p.y);
+  ctx.stroke();
+
+  ctx.fillStyle = "red";
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, 18, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawGlow() {
+  ctx.fillStyle = "rgba(0, 255, 120, 0.25)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+function applyFilter(gesture, landmarks) {
+  if (gesture === "OPEN PALM") {
+    drawGlow();
+  }
+
   if (gesture === "FIST") {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    drawFire();
   }
 
   if (gesture === "PEACE") {
-    ctx.fillStyle = "rgba(255, 0, 120, 0.25)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    drawSunglasses(landmarks);
   }
 
   if (gesture === "THUMBS UP") {
-    ctx.fillStyle = "rgba(0, 255, 80, 0.25)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    drawCrown(landmarks);
   }
 
   if (gesture === "POINTING") {
-    ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    drawLaser(landmarks);
   }
 }
 
@@ -66,21 +113,18 @@ hands.setOptions({
 hands.onResults(results => {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+
   let gesture = "SHOW HAND";
 
   if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-    gesture = getGesture(results.multiHandLandmarks[0]);
-  }
+    const landmarks = results.multiHandLandmarks[0];
+    gesture = getGesture(landmarks);
 
-  ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+    applyFilter(gesture, landmarks);
 
-  applyEffect(gesture);
-
-  if (results.multiHandLandmarks) {
-    for (const landmarks of results.multiHandLandmarks) {
-      drawConnectors(ctx, landmarks, HAND_CONNECTIONS);
-      drawLandmarks(ctx, landmarks);
-    }
+    drawConnectors(ctx, landmarks, HAND_CONNECTIONS);
+    drawLandmarks(ctx, landmarks);
   }
 
   ctx.font = "40px Arial";
