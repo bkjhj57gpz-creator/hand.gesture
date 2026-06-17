@@ -30,6 +30,28 @@ function getGesture(landmarks) {
   return "HAND";
 }
 
+function applyEffect(gesture) {
+  if (gesture === "FIST") {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  if (gesture === "PEACE") {
+    ctx.fillStyle = "rgba(255, 0, 120, 0.25)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  if (gesture === "THUMBS UP") {
+    ctx.fillStyle = "rgba(0, 255, 80, 0.25)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  if (gesture === "POINTING") {
+    ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+}
+
 const hands = new Hands({
   locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
 });
@@ -50,20 +72,9 @@ hands.onResults(results => {
     gesture = getGesture(results.multiHandLandmarks[0]);
   }
 
-  if (gesture === "FIST") {
-    ctx.filter = "brightness(40%)";
-  } else if (gesture === "PEACE") {
-    ctx.filter = "hue-rotate(120deg) saturate(2)";
-  } else if (gesture === "THUMBS UP") {
-    ctx.filter = "contrast(180%)";
-  } else if (gesture === "POINTING") {
-    ctx.filter = "grayscale(100%)";
-  } else {
-    ctx.filter = "none";
-  }
-
   ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
-  ctx.filter = "none";
+
+  applyEffect(gesture);
 
   if (results.multiHandLandmarks) {
     for (const landmarks of results.multiHandLandmarks) {
